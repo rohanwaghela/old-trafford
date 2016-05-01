@@ -1,0 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun May 01 12:34:21 2016
+
+@author: RADADIYA
+"""
+
+import scipy
+import pandas as pd
+data=pd.read_excel("ExamProblemData2.1.xlsx","ExamProblemData")
+print data
+col1=scipy.array(data["Col1"])
+print col1
+col2=scipy.array(data["Col2"])
+print col2

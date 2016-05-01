@@ -1,0 +1,88 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb 01 21:05:32 2016
+
+@author: Ankit
+"""
+
+import scipy
+from scipy.stats import chisquare
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from scipy.stats.distributions import t
+import win32com.client
+
+xl=win32com.client.gencache.EnsureDispatch("Excel.Application")
+wb=xl.Workbooks('book1.xlsx')
+sheet=wb.Sheets('Sheet1')
+def getdat(sheet,Range):
+    data=sheet.Range(Range).Value
+    data=scipy.array(data)
+    data=data.reshape((1,len(data)))[0]
+    return data
+    
+xdata=getdat(sheet,"A2:A9") 
+ydata=getdat(sheet,"B2:B9") 
+print xdata
+print ydata
+
+#xdata=np.array([0,30,60,90,120,150,180,210,240,270])
+print (xdata)
+#ydata=np.array([0.405,0.587,0.811,0.811,1.098,1.504,1.504,2.197,2.197,2.197])
+print (ydata)
+#yerr=np.array([0.4567,0.621,0.4054,0.4054,0.847,1.386,1.386,2.318,2.318,2.318])
+#print (yerr)
+#plt.plot(xdata,ydata,'x')
+#plt.show()
+#plt.plot(xdata,yerr,'o')
+#plt.show()
+
+#this is the function we want to fit
+def func(xdata,a,b):
+    return a*xdata/(1+b*xdata)
+initial_guess=[1.0,2.0]
+pars,pcov=curve_fit(func,xdata,ydata,p0=initial_guess)
+
+
+#95%confidence interval
+alpha=0.05
+n=len(ydata) #number of data points
+p=len(pars)  #number of parameters
+
+dof=max(0,n-p)  #degree of freedom
+
+
+def error(p,xdata,ydata):
+    err=ydata-func(xdata,p)
+    return err
+
+    
+def get_r2(xdata,ydata,yfit):
+    ydatamean=scipy.average(ydata)
+    dydatamean2=(ydata-ydatamean)**2
+    dyfit2=(ydata-yfit)**2
+    r2=1-sum(dyfit2)/sum(dydatamean2)
+    return r2
+
+    
+#student-tvalue dor dof and confidence level
+tval=t.ppf(1.0-alpha/2.0, dof)
+for i,p,var in zip(range(n),pars,np.diag(pcov)):
+    sigma=var**0.5
+    print 'p{0};{1}[{2} {3}]'.format(i,p,p-sigma*tval,p+sigma*tval)
+
+#def error(ydata,func):
+    #residuals=ydata-func
+    #return residuals
+#res=scipy.optimize.leastsq(error,xdata,ydata,initial_guess) 
+
+
+plt.plot(xdata,ydata,'x')  
+#plt.plot(xdata,yerr,'o') 
+yfit=func(xdata,pars[0],pars[1])
+plt.plot(xdata,yfit,'r-')
+plt.show()
+print sigma
+print pars
+print pcov
